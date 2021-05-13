@@ -48,16 +48,13 @@ int main()
 		}
 		for (i = 0; i < 10; i++)
 		{
-			if (time >= p[i].arrivalTime)
+			if (time >= p[i].arrivalTime && p[i].burstTime >= 1)
 			{
-				if (p[i].burstTime >= 1)
-				{
-					if (t[i].lock < 3)
+				if (t[i].lock < 3)
 					{
 						run(i);
 						break;
-					}				
-				}
+					}
 			}
 			else
 			{
