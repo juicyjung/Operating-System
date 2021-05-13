@@ -1,4 +1,3 @@
-#define _CRT_SECURE_NO_WARNINGS
 #include<stdio.h>
 
 int i;
@@ -9,15 +8,10 @@ int contextSwitch = 0;
 
 struct process
 {
-	int pid, priority, arrivalTime, burstTime;
+	int pid, priority, arrivalTime, burstTime, finishTime, runningTime, firstTime, waitTime;
 };
 
-struct info
-{
-	int finishTime, runningTime, firstTime, waitTime;
-};
 struct process p[10];
-struct info t[10];
 
 void sort();
 void run(int);
@@ -33,7 +27,7 @@ int main()
 	for (i = 0; i < 10; i++)
 	{
 		fscanf(fp, "%d %d %d %d", &p[i].pid, &p[i].priority, &p[i].arrivalTime, &p[i].burstTime);
-		t[i].firstTime = 50000;
+		p[i].firstTime = 50000;
 	}
 	fclose(fp);
 
@@ -105,7 +99,7 @@ void run(int which)
 	if (p[which].burstTime == 1)
 	{
 		printf("<time %d> process %d is finished\n", time, p[which].pid);
-		t[which].finishTime = time + 1;
+		p[which].finishTime = time + 1;
 		numberOfExit++;
 	}
 	else
@@ -117,11 +111,11 @@ void run(int which)
 	for (i = 0; i < 10; i++)
 	{
 		if (time >= p[i].arrivalTime && p[i].burstTime >= 1 && i != which)
-			t[i].waitTime++;
+			p[i].waitTime++;
 	}
 
-	if (t[which].firstTime >= time)
-		t[which].firstTime = time;
+	if (p[which].firstTime >= time)
+		p[which].firstTime = time;
 
 	contextSwitch = p[which].pid;
 }
@@ -142,6 +136,26 @@ void calculate()
 
 	double cpuUsage;
 	cpuUsage = 100 * (time - idleCount) / (double)time;
+
+	double waitingTime = 0;
+	double responseTime = 0;
+	double turnaroundTime = 0;
+	for (i = 0; i < 10; i++)
+	{
+		waitingTime += p[i].waitTime;
+		responseTime += p[i].firstTime - p[i].arrivalTime;
+		turnaroundTime += p[i].finishTime - p[i].arrivalTime;
+	}
+	waitingTime /= (double)10;
+	responseTime /= (double)10;
+	turnaroundTime /= (double)10;
+
+	printf("===================================================\n");
+	printf("Average cpu usage : %f\n", cpuUsage);
+	printf("Average waiting time : %f\n", waitingTime);
+	printf("Average response time : %f\n", responseTime);
+	printf("Average turnaround time : %f\n", turnaroundTime);
+}
 
 	double waitingTime = 0;
 	double responseTime = 0;
