@@ -32,7 +32,6 @@ int main(int argc, char* argv[])
 	fclose(fp);
 
 	sort();
-
 	fp = fopen(argv[2], "wt");
 
 	while (1)
