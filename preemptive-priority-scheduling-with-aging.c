@@ -33,7 +33,6 @@ int main(int argc, char* argv[])
 		p[i].firstTime = 50000;
 	}
 	fclose(fp);
-
 	double alpha = atof(argv[4]);
 
 	sort();
