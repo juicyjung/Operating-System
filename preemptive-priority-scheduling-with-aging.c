@@ -1,14 +1,16 @@
 #include<stdio.h>
+#include <stdlib.h>
 
 int i;
 int time, idleCount = 0;
+int notArrive = 0;
 int numberOfExit = 0;
 int contextSwitch = 0;
 
-
 struct process
 {
-	int pid, priority, arrivalTime, burstTime, finishTime, runningTime, firstTime, waitTime;
+	int pid, arrivalTime, burstTime, finishTime, firstTime, waitTime;
+	double priority, basePriority;
 };
 
 struct process p[10];
@@ -26,10 +28,13 @@ int main(int argc, char* argv[])
 
 	for (i = 0; i < 10; i++)
 	{
-		fscanf(fp, "%d %d %d %d", &p[i].pid, &p[i].priority, &p[i].arrivalTime, &p[i].burstTime);
+		fscanf(fp, "%d %lf %d %d", &p[i].pid, &p[i].priority, &p[i].arrivalTime, &p[i].burstTime);
+		p[i].basePriority = p[i].priority;
 		p[i].firstTime = 50000;
 	}
 	fclose(fp);
+
+	double alpha = atof(argv[4]);
 
 	sort();
 
@@ -37,27 +42,27 @@ int main(int argc, char* argv[])
 
 	while (1)
 	{
+		sort();
 		for (i = 0; i < 10; i++)
 		{
 			if (time == p[i].arrivalTime)
 				newArrival(fp, i);
 		}
+
+		notArrive = 0;
 		for (i = 0; i < 10; i++)
 		{
-			if (time >= p[i].arrivalTime)
+			if (time >= p[i].arrivalTime && p[i].burstTime >= 1)
 			{
-				if (p[i].burstTime >= 1)
-				{
-					run(fp, i);
-					break;
-				}
-			}
-			else
-			{
-				idle(fp);
+				run(fp, i);
 				break;
 			}
+			else
+				notArrive++;
 		}
+
+		if(notArrive==10 && numberOfExit != 10)
+			idle(fp);
 
 		if (numberOfExit == 10)
 		{
@@ -66,6 +71,12 @@ int main(int argc, char* argv[])
 			break;
 		}
 		time++;
+		
+		for (i = 0; i < 10; i++)
+		{
+			if (time >= p[i].arrivalTime && p[i].burstTime >= 1)
+				p[i].priority = p[i].basePriority + alpha * p[i].waitTime;
+		}
 	}
 	calculate(fp);
 	fclose(fp);
@@ -73,16 +84,16 @@ int main(int argc, char* argv[])
 
 void sort()
 {
-	struct process temp;
+	struct process temp1;
 	for (int i = 9; i > 0; i--)
 	{
 		for (int j = 0; j < i; j++)
 		{
-			if (p[j].arrivalTime > p[j + 1].arrivalTime)
+			if (p[j].priority < p[j + 1].priority)
 			{
-				temp = p[j];
+				temp1 = p[j];
 				p[j] = p[j + 1];
-				p[j + 1] = temp;
+				p[j + 1] = temp1;
 			}
 		}
 	}
@@ -100,7 +111,7 @@ void run(FILE* fp, int which)
 	{
 		fprintf(fp, "<time %d> process %d is finished\n", time, p[which].pid);
 		printf("<time %d> process %d is finished\n", time, p[which].pid);
-		p[which].finishTime = time + 1;
+		p[which].finishTime = time+1;
 		numberOfExit++;
 	}
 	else
@@ -159,6 +170,7 @@ void calculate(FILE* fp)
 	printf("Average waiting time : %f\n", waitingTime);
 	printf("Average response time : %f\n", responseTime);
 	printf("Average turnaround time : %f\n", turnaroundTime);
+
 	fprintf(fp, "===================================================\n");
 	fprintf(fp, "Average cpu usage : %f\n", cpuUsage);
 	fprintf(fp, "Average waiting time : %f\n", waitingTime);
